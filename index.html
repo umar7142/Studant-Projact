@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student OS | Management System V2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #020617; 
+            color: #f8fafc;
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            overflow: hidden; 
+        }
+
+        /* 🌌 BACKGROUND ANIMATIONS */
+        .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.4; animation: float 12s infinite ease-in-out alternate; z-index: -1; pointer-events: none; }
+        .orb-1 { width: 450px; height: 450px; background: #3b82f6; top: -15%; left: -10%; }
+        .orb-2 { width: 550px; height: 550px; background: #8b5cf6; bottom: -20%; right: -15%; animation-delay: -5s; }
+        .orb-3 { width: 350px; height: 350px; background: #06b6d4; top: 30%; left: 35%; animation-delay: -2s; opacity: 0.3; }
+
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(40px, 60px) scale(1.1); } }
+
+        /* 💎 GLASSMORPHISM UI */
+        .glass-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6); position: relative; z-index: 10; }
+        .glass-block { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s; position: relative; z-index: 20; }
+        .glass-block:focus { background: rgba(255, 255, 255, 0.08); border-color: #60a5fa; outline: none; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
+        .glass-btn { background: rgba(59, 130, 246, 0.2); backdrop-filter: blur(10px); border: 1px solid rgba(96, 165, 250, 0.3); transition: all 0.2s; cursor: pointer; position: relative; z-index: 20; }
+        .glass-btn:hover:not(:disabled) { background: rgba(59, 130, 246, 0.4); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .glass-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .fade-enter { animation: fadeUp 0.5s forwards; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 relative">
+
+    <div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div>
+
+    <div id="authContainer" class="glass-card rounded-3xl p-8 w-full max-w-md">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center h-16 w-16 rounded-2xl glass-block mb-4 pointer-events-none">
+                <i class="fa-solid fa-graduation-cap text-3xl text-blue-400"></i>
+            </div>
+            <h1 class="text-3xl font-bold tracking-tight text-white">Student <span class="text-blue-400">OS</span></h1>
+            <p id="formTitle" class="text-slate-400 text-sm mt-1">Enterprise Authentication</p>
+        </div>
+
+        <div id="loginSection" class="fade-enter" style="display: block;">
+            <div class="space-y-4">
+                <input type="text" id="login_username" placeholder="Admin Username" class="glass-block w-full px-5 py-4 rounded-xl">
+                <div>
+                    <input type="password" id="login_password" placeholder="Password" class="glass-block w-full px-5 py-4 rounded-xl">
+                    <div class="text-right mt-2">
+                        <span onclick="switchScreen('forgotReq')" class="text-xs text-slate-400 hover:text-blue-300 cursor-pointer font-medium transition">Forgot Password?</span>
+                    </div>
+                </div>
+                <button onclick="doLogin()" id="loginBtn" class="glass-btn w-full text-white font-bold py-4 rounded-xl mt-2">
+                    Access Database <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+            <p class="text-center text-sm text-slate-400 mt-6">
+                New admin? <span onclick="switchScreen('signup')" class="text-blue-400 font-bold hover:text-white cursor-pointer px-2 py-1">Register Here</span>
+            </p>
+        </div>
+
+        <div id="signupSection" style="display: none;">
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="signup_name" placeholder="Full Name" class="glass-block w-full px-4 py-3.5 rounded-xl">
+                    <input type="text" id="signup_username" placeholder="Username" class="glass-block w-full px-4 py-3.5 rounded-xl">
+                </div>
+                <input type="email" id="signup_email" placeholder="Email Address" class="glass-block w-full px-4 py-3.5 rounded-xl">
+                <input type="password" id="signup_password" placeholder="Password" class="glass-block w-full px-4 py-3.5 rounded-xl">
+                <button onclick="doSignup()" id="signupBtn" class="glass-btn w-full text-white font-bold py-4 rounded-xl mt-2">
+                    Create Admin Account <i class="fa-solid fa-user-shield ml-2"></i>
+                </button>
+            </div>
+            <p class="text-center text-sm text-slate-400 mt-5">
+                Already registered? <span onclick="switchScreen('login')" class="text-blue-400 font-bold hover:text-white cursor-pointer px-2 py-1">Back to Login</span>
+            </p>
+        </div>
+
+        <div id="otpSection" style="display: none;">
+            <div class="glass-block px-4 py-3 rounded-xl text-sm mb-6 flex items-center justify-center gap-3 text-blue-200 pointer-events-none">
+                <i class="fa-solid fa-envelope-open-text text-xl animate-pulse text-blue-400"></i><span>OTP sent to your email.</span>
+            </div>
+            <div class="space-y-5">
+                <input type="text" id="otp_code" maxlength="6" placeholder="000000" class="glass-block w-full px-4 py-5 rounded-2xl text-center text-4xl font-bold tracking-[1rem]">
+                <button onclick="doVerify()" id="verifyBtn" class="glass-btn w-full text-white font-bold py-4 rounded-xl">
+                    Verify Identity <i class="fa-solid fa-check-double ml-2"></i>
+                </button>
+                <div class="text-center mt-3 flex flex-col items-center justify-center h-12">
+                    <span onclick="resendOtp()" id="resendBtn" class="text-slate-400 text-sm font-bold hover:text-white cursor-pointer py-2 block"><i class="fa-solid fa-rotate-right mr-1"></i> Resend OTP</span>
+                    <p id="timerText" class="text-xs font-bold text-red-400 hidden mt-1">Cooldown: <span id="timeCount" class="text-white">30</span>s</p>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <span onclick="switchScreen('login')" class="text-slate-500 hover:text-slate-300 text-xs font-bold uppercase cursor-pointer py-2 block">Abort Process</span>
+            </div>
+        </div>
+
+        <div id="forgotReqSection" style="display: none;">
+            <div class="text-center mb-6">
+                <i class="fa-solid fa-lock text-4xl text-slate-500 mb-3 block"></i>
+                <h3 class="text-white font-bold text-lg">Reset Password</h3>
+                <p class="text-xs text-slate-400 mt-1">Enter your username to receive a recovery code.</p>
+            </div>
+            <div class="space-y-4">
+                <input type="text" id="forgot_username" placeholder="Enter Username" class="glass-block w-full px-5 py-4 rounded-xl">
+                <button onclick="doForgotRequest()" id="forgotReqBtn" class="glass-btn w-full text-white font-bold py-4 rounded-xl mt-2">
+                    Send Recovery OTP <i class="fa-solid fa-paper-plane ml-2"></i>
+                </button>
+            </div>
+            <p class="text-center text-sm text-slate-400 mt-6">
+                Remembered it? <span onclick="switchScreen('login')" class="text-blue-400 font-bold hover:text-white cursor-pointer px-2 py-1">Back to Login</span>
+            </p>
+        </div>
+
+        <div id="forgotResetSection" style="display: none;">
+            <div class="glass-block px-4 py-3 rounded-xl text-sm mb-6 flex items-center justify-center gap-3 text-blue-200 pointer-events-none">
+                <i class="fa-solid fa-shield-halved text-xl text-emerald-400"></i><span>Recovery OTP Dispatched!</span>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5 ml-1">Recovery OTP</label>
+                    <input type="text" id="forgot_otp" maxlength="6" placeholder="000000" class="glass-block w-full px-5 py-4 rounded-xl text-center text-2xl font-bold tracking-[0.5rem]">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5 ml-1">New Password</label>
+                    <input type="password" id="forgot_new_pass" placeholder="Enter new strong password" class="glass-block w-full px-5 py-4 rounded-xl">
+                </div>
+                <button onclick="doForgotReset()" id="forgotResetBtn" class="glass-btn w-full text-white font-bold py-4 rounded-xl mt-4 bg-emerald-500/20 border-emerald-500/30 hover:bg-emerald-500/40">
+                    Set New Password <i class="fa-solid fa-floppy-disk ml-2"></i>
+                </button>
+            </div>
+            <div class="text-center mt-4">
+                <span onclick="switchScreen('login')" class="text-slate-500 hover:text-slate-300 text-xs font-bold uppercase cursor-pointer py-2 block">Cancel</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboardSection" class="w-full h-[90vh] max-w-6xl z-10 fade-enter flex flex-col" style="display: none;">
+        <header class="glass-card rounded-2xl p-5 mb-6 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="glass-block p-3 rounded-xl pointer-events-none"><i class="fa-solid fa-server text-xl text-blue-400"></i></div>
+                <div>
+                    <h2 class="text-xl font-bold text-white tracking-tight">Student Control Panel</h2>
+                    <p class="text-emerald-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_#34d399]"></span> Database Connected</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="welcomeText" class="font-medium text-blue-200 glass-block px-4 py-2 rounded-full pointer-events-none">Admin: Root</span>
+                
+                <button onclick="openChangePassModal()" class="text-amber-300 hover:text-amber-100 font-bold text-sm cursor-pointer p-2 border-r border-white/10 pr-4 mr-1 transition">
+                    <i class="fa-solid fa-key mr-1"></i> Change Key
+                </button>
+
+                <button onclick="logout()" class="text-slate-400 hover:text-red-400 font-bold text-sm cursor-pointer p-2 transition">
+                    <i class="fa-solid fa-power-off mr-1"></i> Disconnect
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-3 gap-6 mb-6">
+            <div class="glass-card rounded-2xl p-6 flex items-center justify-between pointer-events-none">
+                <div><p class="text-slate-400 text-sm font-bold uppercase">Total Students</p><h3 id="stat_students" class="text-4xl font-bold text-white mt-1">0</h3></div>
+                <i class="fa-solid fa-users text-4xl text-blue-400/50"></i>
+            </div>
+            <div class="glass-card rounded-2xl p-6 flex items-center justify-between pointer-events-none">
+                <div><p class="text-slate-400 text-sm font-bold uppercase">Active Classes</p><h3 id="stat_classes" class="text-4xl font-bold text-white mt-1">0</h3></div>
+                <i class="fa-solid fa-chalkboard-user text-4xl text-purple-400/50"></i>
+            </div>
+            <div class="glass-card rounded-2xl p-6 flex items-center justify-between pointer-events-none">
+                <div><p class="text-slate-400 text-sm font-bold uppercase">Total Courses</p><h3 id="stat_courses" class="text-4xl font-bold text-white mt-1">0</h3></div>
+                <i class="fa-solid fa-book text-4xl text-emerald-400/50"></i>
+            </div>
+        </div>
+
+        <div class="glass-card rounded-2xl flex-1 flex flex-col overflow-hidden">
+            <div class="p-5 border-b border-white/10 flex justify-between items-center bg-white/5">
+                <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-table-list mr-2 text-blue-400"></i> Student Records</h3>
+                <button onclick="openStudentModal()" class="glass-btn px-6 py-2.5 rounded-xl text-white font-bold flex items-center gap-2 z-50">
+                    <i class="fa-solid fa-plus"></i> Add New Student
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-5">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-slate-400 text-xs uppercase tracking-widest border-b border-white/10">
+                            <th class="pb-3 font-bold">Reg No. & Name</th>
+                            <th class="pb-3 font-bold">Contact</th>
+                            <th class="pb-3 font-bold">Class / Course</th>
+                            <th class="pb-3 font-bold text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody" class="text-sm">
+                        <tr><td colspan="4" class="text-center py-8 text-slate-500 italic">No data loaded yet...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="addStudentModal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center fade-enter" style="display: none; z-index: 9999;">
+        <div class="glass-card rounded-3xl p-8 w-full max-w-2xl border border-white/20 shadow-2xl relative">
+            <h2 class="text-2xl font-bold text-white mb-6 border-b border-white/10 pb-3"><i class="fa-solid fa-user-plus text-blue-400 mr-2"></i> Register New Student</h2>
+            <div class="grid grid-cols-2 gap-5">
+                <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Reg Number</label><input type="text" id="stu_reg" class="glass-block w-full px-4 py-3 rounded-xl" placeholder="E.g. FA26-BSE-001"></div>
+                <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Full Name</label><input type="text" id="stu_name" class="glass-block w-full px-4 py-3 rounded-xl" placeholder="E.g. Ali Khan"></div>
+                <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Age</label><input type="number" id="stu_age" class="glass-block w-full px-4 py-3 rounded-xl" placeholder="E.g. 20"></div>
+                <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Email</label><input type="email" id="stu_email" class="glass-block w-full px-4 py-3 rounded-xl" placeholder="student@university.edu"></div>
+                <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Class Name</label><input type="text" id="stu_class" class="glass-block w-full px-4 py-3 rounded-xl" placeholder="E.g. Semester 4"></div>
+                <div><label class="block text-xs font-bold text-slate-400 uppercase mb-1.5">Course</label><input type="text" id="stu_course" class="glass-block w-full px-4 py-3 rounded-xl" placeholder="E.g. Computer Science"></div>
+            </div>
+            <div class="flex gap-4 mt-8">
+                <button onclick="closeStudentModal()" class="flex-1 bg-slate-800/80 hover:bg-slate-700 border border-white/20 text-white font-bold py-3.5 rounded-xl cursor-pointer">Cancel</button>
+                <button onclick="saveStudent()" id="saveStuBtn" class="flex-1 bg-blue-600 hover:bg-blue-500 border border-blue-400 text-white font-bold py-3.5 rounded-xl cursor-pointer shadow-[0_0_15px_rgba(37,99,235,0.5)]">Save Record</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="changePassModal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center fade-enter" style="display: none; z-index: 9999;">
+        <div class="glass-card rounded-3xl p-8 w-full max-w-md border border-amber-500/30 shadow-[0_0_40px_-10px_rgba(245,158,11,0.3)] relative">
+            <h2 class="text-2xl font-bold text-white mb-6 border-b border-white/10 pb-3"><i class="fa-solid fa-key text-amber-400 mr-2"></i> Change Master Key</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5 ml-1">Current Password</label>
+                    <input type="password" id="cp_old" placeholder="Enter current password" class="glass-block w-full px-5 py-4 rounded-xl">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5 ml-1">New Password</label>
+                    <input type="password" id="cp_new" placeholder="Create new strong password" class="glass-block w-full px-5 py-4 rounded-xl border-amber-500/20 focus:border-amber-400">
+                </div>
+            </div>
+            <div class="flex gap-4 mt-8">
+                <button onclick="closeChangePassModal()" class="flex-1 bg-slate-800/80 hover:bg-slate-700 border border-white/20 text-white font-bold py-3.5 rounded-xl cursor-pointer transition">Cancel</button>
+                <button onclick="doChangePassword()" id="cpBtn" class="flex-1 glass-btn bg-amber-500/20 border-amber-500/40 hover:bg-amber-500/40 text-amber-100 font-bold py-3.5 rounded-xl cursor-pointer transition">Update Key</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:8000/api/';
+        let tempUsername = ""; 
+
+        const Toast = Swal.mixin({
+            toast: true, position: 'top-end', showConfirmButton: false, timer: 4000,
+            background: 'rgba(15, 23, 42, 0.95)', color: '#fff',
+            customClass: { popup: 'border border-white/10 backdrop-blur-xl rounded-xl' }
+        });
+
+        // ================= NAVIGATION MANAGER =================
+        function switchScreen(screenName) {
+            ['loginSection', 'signupSection', 'otpSection', 'forgotReqSection', 'forgotResetSection', 'dashboardSection'].forEach(s => {
+                let el = document.getElementById(s);
+                if(el) { el.style.display = 'none'; el.classList.remove('fade-enter'); }
+            });
+
+            if (screenName === 'dashboard') {
+                document.getElementById('authContainer').style.display = 'none';
+                let dash = document.getElementById('dashboardSection');
+                dash.style.display = 'flex';
+                setTimeout(() => dash.classList.add('fade-enter'), 10);
+                loadDashboardData();
+            } else {
+                document.getElementById('authContainer').style.display = 'block';
+                let activeScreen = document.getElementById(screenName + 'Section');
+                activeScreen.style.display = 'block';
+                setTimeout(() => activeScreen.classList.add('fade-enter'), 10);
+            }
+        }
+
+        // ================= STANDARD AUTHENTICATION =================
+        async function doLogin() {
+            const username = document.getElementById('login_username').value;
+            const password = document.getElementById('login_password').value;
+            if(!username || !password) return Toast.fire({ icon: 'error', title: 'Credentials missing!' });
+            tempUsername = username; 
+            const btn = document.getElementById('loginBtn');
+            const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+            try {
+                let res = await fetch(`${API_BASE}login/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+                if(res.ok) { switchScreen('otp'); } else { let data = await res.json(); Toast.fire({ icon: 'error', title: data.error || 'Invalid credentials' }); }
+            } catch (err) { Toast.fire({ icon: 'error', title: 'Server Error' }); } finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+
+        async function doSignup() {
+            const name = document.getElementById('signup_name').value;
+            const username = document.getElementById('signup_username').value;
+            const email = document.getElementById('signup_email').value;
+            const password = document.getElementById('signup_password').value;
+            if(!name || !username || !email || !password) return Toast.fire({ icon: 'warning', title: 'Complete the form!' });
+            tempUsername = username; 
+            const btn = document.getElementById('signupBtn');
+            const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+            try {
+                let res = await fetch(`${API_BASE}signup/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, username, email, password }) });
+                if(res.ok) { switchScreen('otp'); } else { let data = await res.json(); Swal.fire({ background: '#020617', color: '#fff', icon: 'error', title: 'Signup Failed!', text: data.error || 'Error' }); }
+            } catch (err) { Toast.fire({ icon: 'error', title: 'Network Error' }); } finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+
+        async function doVerify() {
+            const otp_code = document.getElementById('otp_code').value;
+            if(!otp_code) return Toast.fire({ icon: 'warning', title: 'Enter OTP' });
+            const btn = document.getElementById('verifyBtn');
+            const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+            try {
+                let res = await fetch(`${API_BASE}verify-otp/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempUsername, otp_code }) });
+                if(res.ok) {
+                    localStorage.setItem('is_logged_in', 'true');
+                    localStorage.setItem('username', tempUsername);
+                    document.getElementById('welcomeText').innerText = "Admin: " + tempUsername;
+                    switchScreen('dashboard'); 
+                    Toast.fire({ icon: 'success', title: 'Access Granted' });
+                } else { let data = await res.json(); Toast.fire({ icon: 'error', title: data.error || 'Invalid OTP' }); }
+            } catch (err) { Toast.fire({ icon: 'error', title: 'Server Error' }); } finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+
+        async function resendOtp() {
+            if (!tempUsername) return Toast.fire({ icon: 'error', title: 'Username missing! Login again.' });
+            const resendBtn = document.getElementById('resendBtn'); const timerText = document.getElementById('timerText'); const timeCount = document.getElementById('timeCount');
+            resendBtn.style.pointerEvents = 'none'; resendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Dispatching...';
+            try {
+                let res = await fetch(`${API_BASE}resend-otp/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempUsername }) });
+                if (res.ok) {
+                    Toast.fire({ icon: 'success', title: 'New OTP Dispatched!' });
+                    resendBtn.style.display = 'none'; timerText.classList.remove('hidden');
+                    let timeLeft = 30; timeCount.innerText = timeLeft;
+                    let countdown = setInterval(() => {
+                        timeLeft--; timeCount.innerText = timeLeft;
+                        if (timeLeft <= 0) { clearInterval(countdown); timerText.classList.add('hidden'); resendBtn.style.display = 'block'; resendBtn.innerHTML = '<i class="fa-solid fa-rotate-right mr-1"></i> Resend OTP'; resendBtn.style.pointerEvents = 'auto'; }
+                    }, 1000);
+                } else { let data = await res.json(); Toast.fire({ icon: 'error', title: data.error }); resendBtn.innerHTML = '<i class="fa-solid fa-rotate-right mr-1"></i> Resend OTP'; resendBtn.style.pointerEvents = 'auto'; }
+            } catch (err) { Toast.fire({ icon: 'error', title: 'Network Error' }); resendBtn.innerHTML = '<i class="fa-solid fa-rotate-right mr-1"></i> Resend OTP'; resendBtn.style.pointerEvents = 'auto'; }
+        }
+
+        // ================= 🚀 NAYA MODULE: PASSWORD RECOVERY =================
+        async function doForgotRequest() {
+            const username = document.getElementById('forgot_username').value;
+            if(!username) return Toast.fire({ icon: 'warning', title: 'Enter your username!' });
+            tempUsername = username;
+            
+            const btn = document.getElementById('forgotReqBtn');
+            const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Locating...'; btn.disabled = true;
+            
+            try {
+                let res = await fetch(`${API_BASE}forgot-password-request/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) });
+                let data = await res.json();
+                if(res.ok) { 
+                    Toast.fire({ icon: 'success', title: 'Recovery OTP Sent!' });
+                    switchScreen('forgotReset'); 
+                } else { 
+                    Swal.fire({ background: '#020617', color: '#fff', icon: 'error', title: 'Request Failed', text: data.error }); 
+                }
+            } catch (err) { Toast.fire({ icon: 'error', title: 'Network Error' }); } finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+
+        async function doForgotReset() {
+            const otp_code = document.getElementById('forgot_otp').value;
+            const new_password = document.getElementById('forgot_new_pass').value;
+            
+            if(!otp_code || !new_password) return Toast.fire({ icon: 'warning', title: 'Fill all fields!' });
+            
+            const btn = document.getElementById('forgotResetBtn');
+            const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...'; btn.disabled = true;
+            
+            try {
+                let res = await fetch(`${API_BASE}forgot-password-reset/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempUsername, otp_code, new_password }) });
+                let data = await res.json();
+                if(res.ok) { 
+                    Swal.fire({ background: '#020617', color: '#fff', icon: 'success', title: 'Password Reset!', text: data.message }).then(() => { switchScreen('login'); });
+                } else { 
+                    Swal.fire({ background: '#020617', color: '#fff', icon: 'error', title: 'Update Failed', text: data.error }); 
+                }
+            } catch (err) { Toast.fire({ icon: 'error', title: 'Network Error' }); } finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+
+        // ================= 🔑 NAYA MODULE: CHANGE PASSWORD IN DASHBOARD =================
+        function openChangePassModal() { document.getElementById('changePassModal').style.display = 'flex'; }
+        function closeChangePassModal() { document.getElementById('changePassModal').style.display = 'none'; document.getElementById('cp_old').value = ''; document.getElementById('cp_new').value = ''; }
+
+        async function doChangePassword() {
+            const username = localStorage.getItem('username');
+            const old_password = document.getElementById('cp_old').value;
+            const new_password = document.getElementById('cp_new').value;
+
+            if(!old_password || !new_password) return Toast.fire({ icon: 'warning', title: 'Fill both password fields!' });
+
+            const btn = document.getElementById('cpBtn');
+            const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; btn.disabled = true;
+
+            try {
+                let res = await fetch(`${API_BASE}change-password/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, old_password, new_password }) });
+                let data = await res.json();
+                if(res.ok) {
+                    closeChangePassModal();
+                    Swal.fire({ background: '#020617', color: '#fff', icon: 'success', title: 'Key Updated', text: data.message });
+                } else {
+                    Swal.fire({ background: '#020617', color: '#fff', icon: 'error', title: 'Failed', text: data.error });
+                }
+            } catch (err) { Toast.fire({ icon: 'error', title: 'Server Error' }); } finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+
+        // ================= DASHBOARD & CRUD MANAGER =================
+        async function loadDashboardData() {
+            try {
+                let statsRes = await fetch(`${API_BASE}dashboard/stats/`);
+                if(statsRes.ok) {
+                    let stats = await statsRes.json();
+                    document.getElementById('stat_students').innerText = stats.total_students || 0;
+                    document.getElementById('stat_classes').innerText = stats.total_classes || 0;
+                    document.getElementById('stat_courses').innerText = stats.total_courses || 0;
+                }
+
+                let stuRes = await fetch(`${API_BASE}students/`);
+                if(stuRes.ok) {
+                    let students = await stuRes.json();
+                    let tbody = document.getElementById('studentTableBody');
+                    tbody.innerHTML = ''; 
+                    if(students.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-500 italic">Database is empty. Add a student!</td></tr>`;
+                    } else {
+                        students.forEach(stu => {
+                            tbody.innerHTML += `
+                                <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                                    <td class="py-4"><span class="text-xs text-blue-400 block font-bold tracking-widest uppercase">${stu.registration_number || 'No Reg'}</span><span class="text-white font-medium text-base">${stu.name || 'N/A'}</span></td>
+                                    <td class="py-4 text-slate-300"><span class="block"><i class="fa-solid fa-envelope text-slate-500 mr-1"></i> ${stu.email || 'N/A'}</span><span class="text-xs text-slate-400">Age: ${stu.age || 'N/A'}</span></td>
+                                    <td class="py-4"><span class="block text-white">${stu.class_name || 'N/A'}</span><span class="text-xs text-blue-300">${stu.course || 'N/A'}</span></td>
+                                    <td class="py-4 text-right"><button onclick="deleteStudent(${stu.id})" class="bg-red-500/20 hover:bg-red-500/50 text-red-400 hover:text-white p-2 rounded transition"><i class="fa-solid fa-trash"></i></button></td>
+                                </tr>
+                            `;
+                        });
+                    }
+                }
+            } catch (error) { Toast.fire({ icon: 'error', title: 'Network Error loading data' }); }
+        }
+
+        function openStudentModal() { document.getElementById('addStudentModal').style.display = 'flex'; }
+        function closeStudentModal() { document.getElementById('addStudentModal').style.display = 'none'; ['stu_reg', 'stu_name', 'stu_age', 'stu_email', 'stu_class', 'stu_course'].forEach(id => { document.getElementById(id).value = ''; }); }
+
+        async function saveStudent() {
+            const data = { registration_number: document.getElementById('stu_reg').value, name: document.getElementById('stu_name').value, age: document.getElementById('stu_age').value, email: document.getElementById('stu_email').value, class_name: document.getElementById('stu_class').value, course: document.getElementById('stu_course').value };
+            if(!data.registration_number || !data.name || !data.email || !data.class_name) return Swal.fire({ background: '#020617', color: '#fff', icon: 'warning', title: 'Missing Data', text: 'Please fill all fields!' });
+
+            const btn = document.getElementById('saveStuBtn'); const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...'; btn.disabled = true;
+
+            try {
+                let res = await fetch(`${API_BASE}students/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                let responseData = await res.json(); 
+                if(res.ok) { Toast.fire({ icon: 'success', title: 'Student Registered!' }); closeStudentModal(); loadDashboardData(); } 
+                else { Swal.fire({ background: '#020617', color: '#fff', icon: 'error', title: 'Backend Error!', text: JSON.stringify(responseData) }); }
+            } catch (err) { Swal.fire({ background: '#020617', color: '#fff', icon: 'error', title: 'Server Down', text: 'Could not connect to Django!' }); } finally { btn.innerHTML = originalText; btn.disabled = false; }
+        }
+
+        async function deleteStudent(id) {
+            if(!confirm("Are you sure you want to delete this student?")) return;
+            try { let res = await fetch(`${API_BASE}students/${id}/`, { method: 'DELETE' }); if(res.ok) { Toast.fire({ icon: 'success', title: 'Deleted' }); loadDashboardData(); } } 
+            catch(e) { Toast.fire({ icon: 'error', title: 'Delete failed' }); }
+        }
+
+        function logout() { localStorage.clear(); switchScreen('login'); }
+
+        if (localStorage.getItem('is_logged_in') === 'true') {
+            document.getElementById('welcomeText').innerText = "Admin: " + localStorage.getItem('username');
+            switchScreen('dashboard');
+        } else { switchScreen('login'); }
+    </script>
+</body>
+</html>
