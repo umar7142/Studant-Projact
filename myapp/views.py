@@ -196,7 +196,6 @@ def forgot_password_reset(request):
         otp_record = OTPRecord.objects.get(user=user)
         
         if otp_record.otp_code == str(otp_code):
-            # 🚀 LALA BHAI MAGIC: set_password() password ko secure hash bana kar save karta hai
             user.set_password(new_password)
             user.save()
             otp_record.delete() # Security: Purana OTP delete maar do
@@ -243,10 +242,6 @@ def logout(request):
     return Response({"message": "Successfully logged out!"}, status=status.HTTP_200_OK)
 
 
-# ==========================================
-# 🛑 LALA BHAI FIX: STUDENT APIs & DASHBOARD 
-# Note: IsAuthenticated hata kar AllowAny lagaya hai taake dashboard front-end par chalay!
-# ==========================================
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny]) # Fix: Taake 403 Forbidden na aaye
