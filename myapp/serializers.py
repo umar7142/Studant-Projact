@@ -2,22 +2,39 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Student
 
-# ================= AUTHENTICATION SERIALIZER =================
+# =====================================================================
+# AUTHENTICATION SERIALIZERS
+# =====================================================================
+
 class UserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for User authentication.
+    Handles data validation and secure user instance creation.
+    """
     class Meta:
         model = User
         fields = ['id', 'username', 'password']
-        # extra_kwargs is liye lagaya taake password API mein wapis show na ho (Security)
+        # Security constraint: Ensure the password is never exposed in API responses
         extra_kwargs = {'password': {'write_only': True}} 
 
     def create(self, validated_data):
-        # create_user ka function password ko secure (hash/encrypt) kar deta hai
+        """
+        Overrides the default create method to ensure the password 
+        is cryptographically hashed before saving to the database.
+        """
         user = User.objects.create_user(**validated_data)
         return user
 
 
-# ================= STUDENT SERIALIZER =================
+# =====================================================================
+# CORE APPLICATION SERIALIZERS
+# =====================================================================
+
 class StudentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Student records.
+    Transforms Student model instances into JSON format and vice versa.
+    """
     class Meta:
         model = Student
         fields = '__all__'
