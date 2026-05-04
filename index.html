@@ -19,7 +19,9 @@
             overflow: hidden; 
         }
 
-        /* 🌌 BACKGROUND ANIMATIONS */
+        /* =========================================================
+           BACKGROUND ANIMATIONS (NEON ORBS)
+           ========================================================= */
         .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.4; animation: float 12s infinite ease-in-out alternate; z-index: -1; pointer-events: none; }
         .orb-1 { width: 450px; height: 450px; background: #3b82f6; top: -15%; left: -10%; }
         .orb-2 { width: 550px; height: 550px; background: #8b5cf6; bottom: -20%; right: -15%; animation-delay: -5s; }
@@ -27,7 +29,9 @@
 
         @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(40px, 60px) scale(1.1); } }
 
-        /* 💎 GLASSMORPHISM UI */
+        /* =========================================================
+           GLASSMORPHISM UI COMPONENTS
+           ========================================================= */
         .glass-card { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6); position: relative; z-index: 10; }
         .glass-block { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); color: white; transition: all 0.3s; position: relative; z-index: 20; }
         .glass-block:focus { background: rgba(255, 255, 255, 0.08); border-color: #60a5fa; outline: none; box-shadow: 0 0 15px rgba(59,130,246,0.3); }
@@ -251,16 +255,20 @@
     </div>
 
     <script>
+        // Ensure this base URL matches your Django server's active port
         const API_BASE = 'http://127.0.0.1:8000/api/';
         let tempUsername = ""; 
 
+        // Initialize SweetAlert2 configurations for unified UI feedback
         const Toast = Swal.mixin({
             toast: true, position: 'top-end', showConfirmButton: false, timer: 4000,
             background: 'rgba(15, 23, 42, 0.95)', color: '#fff',
             customClass: { popup: 'border border-white/10 backdrop-blur-xl rounded-xl' }
         });
 
-        // ================= NAVIGATION MANAGER =================
+        // ---------------------------------------------------------
+        // UI NAVIGATION & STATE MANAGER
+        // ---------------------------------------------------------
         function switchScreen(screenName) {
             ['loginSection', 'signupSection', 'otpSection', 'forgotReqSection', 'forgotResetSection', 'dashboardSection'].forEach(s => {
                 let el = document.getElementById(s);
@@ -281,14 +289,20 @@
             }
         }
 
-        // ================= STANDARD AUTHENTICATION =================
+        // ---------------------------------------------------------
+        // CORE AUTHENTICATION LOGIC (Sign Up, Log In, 2FA)
+        // ---------------------------------------------------------
         async function doLogin() {
             const username = document.getElementById('login_username').value;
             const password = document.getElementById('login_password').value;
             if(!username || !password) return Toast.fire({ icon: 'error', title: 'Credentials missing!' });
+            
             tempUsername = username; 
             const btn = document.getElementById('loginBtn');
-            const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+            const originalText = btn.innerHTML; 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
+            btn.disabled = true;
+            
             try {
                 let res = await fetch(`${API_BASE}login/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
                 if(res.ok) { switchScreen('otp'); } else { let data = await res.json(); Toast.fire({ icon: 'error', title: data.error || 'Invalid credentials' }); }
@@ -301,9 +315,13 @@
             const email = document.getElementById('signup_email').value;
             const password = document.getElementById('signup_password').value;
             if(!name || !username || !email || !password) return Toast.fire({ icon: 'warning', title: 'Complete the form!' });
+            
             tempUsername = username; 
             const btn = document.getElementById('signupBtn');
-            const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+            const originalText = btn.innerHTML; 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
+            btn.disabled = true;
+            
             try {
                 let res = await fetch(`${API_BASE}signup/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, username, email, password }) });
                 if(res.ok) { switchScreen('otp'); } else { let data = await res.json(); Swal.fire({ background: '#020617', color: '#fff', icon: 'error', title: 'Signup Failed!', text: data.error || 'Error' }); }
@@ -313,8 +331,12 @@
         async function doVerify() {
             const otp_code = document.getElementById('otp_code').value;
             if(!otp_code) return Toast.fire({ icon: 'warning', title: 'Enter OTP' });
+            
             const btn = document.getElementById('verifyBtn');
-            const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+            const originalText = btn.innerHTML; 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
+            btn.disabled = true;
+            
             try {
                 let res = await fetch(`${API_BASE}verify-otp/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempUsername, otp_code }) });
                 if(res.ok) {
@@ -330,7 +352,10 @@
         async function resendOtp() {
             if (!tempUsername) return Toast.fire({ icon: 'error', title: 'Username missing! Login again.' });
             const resendBtn = document.getElementById('resendBtn'); const timerText = document.getElementById('timerText'); const timeCount = document.getElementById('timeCount');
-            resendBtn.style.pointerEvents = 'none'; resendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Dispatching...';
+            
+            resendBtn.style.pointerEvents = 'none'; 
+            resendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Dispatching...';
+            
             try {
                 let res = await fetch(`${API_BASE}resend-otp/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempUsername }) });
                 if (res.ok) {
@@ -345,14 +370,18 @@
             } catch (err) { Toast.fire({ icon: 'error', title: 'Network Error' }); resendBtn.innerHTML = '<i class="fa-solid fa-rotate-right mr-1"></i> Resend OTP'; resendBtn.style.pointerEvents = 'auto'; }
         }
 
-        // ================= 🚀 NAYA MODULE: PASSWORD RECOVERY =================
+        // ---------------------------------------------------------
+        // PASSWORD RECOVERY & MANAGEMENT MODULE
+        // ---------------------------------------------------------
         async function doForgotRequest() {
             const username = document.getElementById('forgot_username').value;
             if(!username) return Toast.fire({ icon: 'warning', title: 'Enter your username!' });
-            tempUsername = username;
             
+            tempUsername = username;
             const btn = document.getElementById('forgotReqBtn');
-            const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Locating...'; btn.disabled = true;
+            const originalText = btn.innerHTML; 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Locating...'; 
+            btn.disabled = true;
             
             try {
                 let res = await fetch(`${API_BASE}forgot-password-request/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) });
@@ -373,7 +402,9 @@
             if(!otp_code || !new_password) return Toast.fire({ icon: 'warning', title: 'Fill all fields!' });
             
             const btn = document.getElementById('forgotResetBtn');
-            const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...'; btn.disabled = true;
+            const originalText = btn.innerHTML; 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...'; 
+            btn.disabled = true;
             
             try {
                 let res = await fetch(`${API_BASE}forgot-password-reset/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: tempUsername, otp_code, new_password }) });
@@ -386,7 +417,6 @@
             } catch (err) { Toast.fire({ icon: 'error', title: 'Network Error' }); } finally { btn.innerHTML = originalText; btn.disabled = false; }
         }
 
-        // ================= 🔑 NAYA MODULE: CHANGE PASSWORD IN DASHBOARD =================
         function openChangePassModal() { document.getElementById('changePassModal').style.display = 'flex'; }
         function closeChangePassModal() { document.getElementById('changePassModal').style.display = 'none'; document.getElementById('cp_old').value = ''; document.getElementById('cp_new').value = ''; }
 
@@ -398,7 +428,9 @@
             if(!old_password || !new_password) return Toast.fire({ icon: 'warning', title: 'Fill both password fields!' });
 
             const btn = document.getElementById('cpBtn');
-            const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; btn.disabled = true;
+            const originalText = btn.innerHTML; 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; 
+            btn.disabled = true;
 
             try {
                 let res = await fetch(`${API_BASE}change-password/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, old_password, new_password }) });
@@ -412,9 +444,12 @@
             } catch (err) { Toast.fire({ icon: 'error', title: 'Server Error' }); } finally { btn.innerHTML = originalText; btn.disabled = false; }
         }
 
-        // ================= DASHBOARD & CRUD MANAGER =================
+        // ---------------------------------------------------------
+        // DATA MANAGEMENT (CRUD OPERATIONS)
+        // ---------------------------------------------------------
         async function loadDashboardData() {
             try {
+                // Fetch aggregate system metrics
                 let statsRes = await fetch(`${API_BASE}dashboard/stats/`);
                 if(statsRes.ok) {
                     let stats = await statsRes.json();
@@ -423,6 +458,7 @@
                     document.getElementById('stat_courses').innerText = stats.total_courses || 0;
                 }
 
+                // Fetch and populate student records
                 let stuRes = await fetch(`${API_BASE}students/`);
                 if(stuRes.ok) {
                     let students = await stuRes.json();
@@ -447,34 +483,59 @@
         }
 
         function openStudentModal() { document.getElementById('addStudentModal').style.display = 'flex'; }
-        function closeStudentModal() { document.getElementById('addStudentModal').style.display = 'none'; ['stu_reg', 'stu_name', 'stu_age', 'stu_email', 'stu_class', 'stu_course'].forEach(id => { document.getElementById(id).value = ''; }); }
+        
+        function closeStudentModal() { 
+            document.getElementById('addStudentModal').style.display = 'none'; 
+            ['stu_reg', 'stu_name', 'stu_age', 'stu_email', 'stu_class', 'stu_course'].forEach(id => { document.getElementById(id).value = ''; }); 
+        }
 
         async function saveStudent() {
-            const data = { registration_number: document.getElementById('stu_reg').value, name: document.getElementById('stu_name').value, age: document.getElementById('stu_age').value, email: document.getElementById('stu_email').value, class_name: document.getElementById('stu_class').value, course: document.getElementById('stu_course').value };
+            const data = { 
+                registration_number: document.getElementById('stu_reg').value, 
+                name: document.getElementById('stu_name').value, 
+                age: document.getElementById('stu_age').value, 
+                email: document.getElementById('stu_email').value, 
+                class_name: document.getElementById('stu_class').value, 
+                course: document.getElementById('stu_course').value 
+            };
+            
             if(!data.registration_number || !data.name || !data.email || !data.class_name) return Swal.fire({ background: '#020617', color: '#fff', icon: 'warning', title: 'Missing Data', text: 'Please fill all fields!' });
 
-            const btn = document.getElementById('saveStuBtn'); const originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...'; btn.disabled = true;
+            const btn = document.getElementById('saveStuBtn'); 
+            const originalText = btn.innerHTML; 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...'; 
+            btn.disabled = true;
 
             try {
                 let res = await fetch(`${API_BASE}students/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
                 let responseData = await res.json(); 
-                if(res.ok) { Toast.fire({ icon: 'success', title: 'Student Registered!' }); closeStudentModal(); loadDashboardData(); } 
-                else { Swal.fire({ background: '#020617', color: '#fff', icon: 'error', title: 'Backend Error!', text: JSON.stringify(responseData) }); }
+                if(res.ok) { 
+                    Toast.fire({ icon: 'success', title: 'Student Registered!' }); 
+                    closeStudentModal(); 
+                    loadDashboardData(); 
+                } else { 
+                    Swal.fire({ background: '#020617', color: '#fff', icon: 'error', title: 'Backend Error!', text: JSON.stringify(responseData) }); 
+                }
             } catch (err) { Swal.fire({ background: '#020617', color: '#fff', icon: 'error', title: 'Server Down', text: 'Could not connect to Django!' }); } finally { btn.innerHTML = originalText; btn.disabled = false; }
         }
 
         async function deleteStudent(id) {
-            if(!confirm("Are you sure you want to delete this student?")) return;
-            try { let res = await fetch(`${API_BASE}students/${id}/`, { method: 'DELETE' }); if(res.ok) { Toast.fire({ icon: 'success', title: 'Deleted' }); loadDashboardData(); } } 
-            catch(e) { Toast.fire({ icon: 'error', title: 'Delete failed' }); }
+            if(!confirm("Are you sure you want to delete this student record?")) return;
+            try { 
+                let res = await fetch(`${API_BASE}students/${id}/`, { method: 'DELETE' }); 
+                if(res.ok) { Toast.fire({ icon: 'success', title: 'Record Deleted' }); loadDashboardData(); } 
+            } catch(e) { Toast.fire({ icon: 'error', title: 'Delete operation failed' }); }
         }
 
         function logout() { localStorage.clear(); switchScreen('login'); }
 
+        // Application Initialization / Session Check
         if (localStorage.getItem('is_logged_in') === 'true') {
             document.getElementById('welcomeText').innerText = "Admin: " + localStorage.getItem('username');
             switchScreen('dashboard');
-        } else { switchScreen('login'); }
+        } else { 
+            switchScreen('login'); 
+        }
     </script>
 </body>
 </html>
