@@ -1,19 +1,35 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.http import JsonResponse  # HttpResponse ki jagah JsonResponse use karenge
+from django.http import JsonResponse
 
-# Professional API jaisa Home page
-def home(request):
+# =====================================================================
+# SYSTEM HEALTH CHECK & ROOT ENDPOINT
+# =====================================================================
+
+def api_root(request):
+    """
+    Root endpoint returning a JSON payload for system health monitoring
+    and general API routing information.
+    """
     return JsonResponse({
-        "developer": "Umer Mirza",
-        "message": "Welcome",
-        "status": "Server is Running smoothly ",
+        "developer": "Muhammad Umar",
+        "system": "Student OS Backend API",
+        "status": "Operational",
+        "environment": "Production Ready",
+        "version": "1.0.0"
     })
 
+# =====================================================================
+# MAIN URL ROUTING
+# =====================================================================
+
 urlpatterns = [
-    path('', home),  
+    # API Health Check Endpoint
+    path('', api_root, name='api-root'),  
+    
+    # Django Administrative Panel
     path('admin/', admin.site.urls),
     
-    # Aapki 'myapp' ki sari APIs ko 'api/' ke raste se connect kar diya
+    # Core Application Endpoints Routing
     path('api/', include('myapp.urls')),
 ]
