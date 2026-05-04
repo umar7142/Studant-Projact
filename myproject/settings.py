@@ -3,6 +3,7 @@ Django settings for myproject project.
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,7 +31,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware', # 🛑 Sab se upar hona zaroori hai!
+    # CORS Middleware must be placed at the top for proper header evaluation
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -84,17 +86,17 @@ USE_TZ = True
 # Static files
 STATIC_URL = 'static/'
 
-# ==========================================
-# 🚀 LALA BHAI'S ENTERPRISE CORS SETTINGS
-# ==========================================
+# =====================================================================
+# CORS & CSRF CONFIGURATION
+# =====================================================================
 
-# 1. Frontend ke har port ko allow kar do (Tension Free)
+# Allow all origins for frontend connectivity (development only)
 CORS_ALLOW_ALL_ORIGINS = True
 
-# 2. Cookies aur Session ID ko frontend par allow karne ki permission
+# Allow cookies and session IDs to be sent cross-origin
 CORS_ALLOW_CREDENTIALS = True
 
-# 3. CSRF Token ko 8080 aur 5500 dono par trust karna
+# Trust these origins for CSRF validation
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8080",
     "http://localhost:8080",
@@ -109,16 +111,17 @@ REST_FRAMEWORK = {
     ],
 }
 
-# ==========================================
-# EMAIL SMTP SETTINGS (For OTP)
-# ==========================================
+# =====================================================================
+# SMTP EMAIL CONFIGURATION
+# =====================================================================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-# Yahan apna asal Gmail address likhein
+# Account Details
 EMAIL_HOST_USER = 'umarasifmirza439@gmail.com' 
 
-# Yahan apna 16-digit wala Google App Password likhein
-EMAIL_HOST_PASSWORD = 'mhntjaslymmhcjim'
+# SECURITY: Replaced your actual password with a placeholder. 
+# Make sure to never push actual passwords to GitHub!
+EMAIL_HOST_PASSWORD = 'YOUR_NEW_APP_PASSWORD_HERE'
