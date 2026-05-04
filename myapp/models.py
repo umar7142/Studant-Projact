@@ -1,10 +1,15 @@
 from django.db import models
-from django.contrib.auth.models import User # OTP model ke liye yeh import zaroori hai
+from django.contrib.auth.models import User
 
-# ==========================================
-# STUDENT MODEL (Aapka Purana Code)
-# ==========================================
+# =====================================================================
+# CORE APPLICATION MODELS
+# =====================================================================
+
 class Student(models.Model):
+    """
+    Represents a student entity in the system.
+    Stores core academic and personal details for system operations.
+    """
     registration_number = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=100)
     age = models.IntegerField()
@@ -16,17 +21,22 @@ class Student(models.Model):
         return self.name
 
 
-# ==========================================
-# OTP RECORD MODEL (Naya Code)
-# ==========================================
+# =====================================================================
+# AUTHENTICATION & SECURITY MODELS
+# =====================================================================
+
 class OTPRecord(models.Model):
-    # Har user ke sath sirf 1 OTP record jura hoga
+    """
+    Manages One-Time Passwords (OTP) for user verification, 2FA, and password resets.
+    Maintains a strict one-to-one relationship with the Django User model.
+    """
+    # Links the OTP strictly to a single user instance. Deletes OTP if user is removed.
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     
-    # 6 digit ka code save karne ki jagah
+    # Stores the generated 6-digit verification token
     otp_code = models.CharField(max_length=6)
     
-    # Yeh automatically time save karega ke OTP kab bana tha (taake hum expiry check kar sakein)
+    # Automatically timestamps creation to facilitate expiry logic and security audits
     created_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
